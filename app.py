@@ -323,32 +323,23 @@ elif menu == "统计分析":
                         LIMIT 10
                     """, conn)
                     
-                 if len(df_family) > 0:
-                        # 处理过长的标签
-                        df_family['amr_gene_family_short'] = df_family['amr_gene_family'].apply(
-                            lambda x: x[:20] + '...' if len(str(x)) > 20 else x
-                        )
+                    if len(df_family) > 0:
                         fig1 = px.bar(
-                            df_family, 
-                            x='amr_gene_family_short', 
-                            y='count', 
+                            df_family,
+                            x='amr_gene_family',
+                            y='count',
                             title="基因家族分布 Top 10",
                             color='count',
                             color_continuous_scale='Viridis',
-                            text='count'  # 在柱子上显示数值
+                            text='count'
                         )
                         fig1.update_layout(
                             xaxis_title="基因家族",
                             yaxis_title="数量",
-                            height=500,
-                            width=600,
-                            showlegend=False,
-                            margin=dict(l=20, r=20, t=40, b=80)  # 增加底部边距
+                            height=450,
+                            showlegend=False
                         )
-                        fig1.update_traces(
-                            textposition='outside',
-                            textfont_size=12
-                        )
+                        fig1.update_traces(textposition='outside')
                         st.plotly_chart(fig1, use_container_width=True)
                     else:
                         st.info("暂无基因家族数据")
