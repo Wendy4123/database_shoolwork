@@ -324,9 +324,9 @@ elif menu == "统计分析":
                     """, conn)
                     
                 if len(df_family) > 0:
-                    df_family['amr_gene_family'] = df_family['amr_gene_family'].apply(
-                        lambda x: x[:25] + '...' if len(x) > 25 else x
-                    )
+                        df_family['amr_gene_family'] = df_family['amr_gene_family'].apply(
+                            lambda x: x[:25] + '...' if len(x) > 25 else x
+                        )
                     
                     if len(df_family) > 0:
                         fig1 = px.bar(
