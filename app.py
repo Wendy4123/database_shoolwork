@@ -323,8 +323,8 @@ elif menu == "统计分析":
                         LIMIT 10
                     """, conn)
                     
-                if len(df_drug) > 0:
-                    df_drug['amr_gene_family'] = df_drug['amr_gene_family'].apply(
+                if len(df_family) > 0:
+                    df_family['amr_gene_family'] = df_family['amr_gene_family'].apply(
                         lambda x: x[:25] + '...' if len(x) > 25 else x
                     )
                     
