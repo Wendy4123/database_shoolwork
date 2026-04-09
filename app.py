@@ -180,7 +180,6 @@ elif menu == "耐药基因查询":
                             FROM aro a
                             LEFT JOIN classification c ON a.model_id = c.model_id
                             WHERE a.aro_accession LIKE %s
-                            LIMIT 50
                             """
                         params = (f'%{search_keyword.strip()}%',)
                     
@@ -192,7 +191,6 @@ elif menu == "耐药基因查询":
                             FROM aro a
                             LEFT JOIN classification c ON a.model_id = c.model_id
                             WHERE a.model_id LIKE %s
-                            LIMIT 50
                             """
                         params = (f'%{search_keyword.strip()}%',)
 
@@ -204,7 +202,6 @@ elif menu == "耐药基因查询":
                             FROM aro a
                             LEFT JOIN classification c ON a.model_id = c.model_id
                             WHERE a.protein_accession LIKE %s
-                            LIMIT 50
                             """
                         params = (f'%{search_keyword.strip()}%',)
                     
@@ -216,7 +213,6 @@ elif menu == "耐药基因查询":
                             FROM aro a
                             LEFT JOIN classification c ON a.model_id = c.model_id
                             WHERE a.dna_accession LIKE %s
-                            LIMIT 50
                             """
                         params = (f'%{search_keyword.strip()}%',)
                     
