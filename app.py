@@ -85,7 +85,7 @@ try:
         conn.close()
         
         # 显示统计信息
-        st.sidebar.metric("🧬 耐药基因总数 (aro)", aro_count)
+        st.sidebar.metric("🧬 ARO总数 (aro)", aro_count)
         st.sidebar.metric("📚 文献数量 (literature)", literature_count)
         st.sidebar.metric("🏷️ 模型数量 (model)", model_count)
         st.sidebar.metric("🔬 SNPs数量 (snps)", snps_count)
@@ -101,7 +101,7 @@ if menu == "数据概览":
     if conn:
         try:
             # 显示 aro 表数据
-            st.write("### 耐药基因表 (aro)")
+            st.write("### ARO表 (aro)")
             df_aro = pd.read_sql("SELECT aro_id, aro_accession, aro_name, model_id, protein_accession, dna_accession FROM aro LIMIT 100", conn)
             st.dataframe(df_aro, use_container_width=True)
 
