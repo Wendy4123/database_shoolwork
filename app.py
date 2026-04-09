@@ -8,12 +8,20 @@ st.set_page_config(page_title="抗生素耐药性数据库", layout="wide")
 
 st.title("🦠 抗生素耐药性数据库管理系统")
 
-# 数据库连接配置
 def get_connection():
     """创建数据库连接，支持本地和Streamlit Cloud"""
     try:
-        # 优先使用 Streamlit Cloud 的 secrets
-        if hasattr(st, 'secrets') and 'mysql' in st.secrets:
+        # 方法1：直接检查 st.secrets 是否存在且包含 mysql 配置
+        use_cloud = False
+        try:
+            if 'mysql' in st.secrets:
+                use_cloud = True
+                st.sidebar.info("🔍 检测到云端配置")
+        except:
+            pass
+        
+        if use_cloud:
+            # 生产环境（TiDB Cloud）
             config = {
                 'host': st.secrets['mysql']['host'],
                 'user': st.secrets['mysql']['user'],
@@ -22,23 +30,33 @@ def get_connection():
                 'port': int(st.secrets['mysql'].get('port', 4000)),
                 'use_pure': True
             }
-            # 可选：如果需要 SSL 证书
-            if 'ssl_ca' in st.secrets['mysql'] and st.secrets['mysql']['ssl_ca']:
-                config['ssl_ca'] = st.secrets['mysql']['ssl_ca']
+            st.sidebar.success("✅ 已连接到 TiDB Cloud")
         else:
-            # 本地运行（修改为您的本地 MySQL 密码）
+            # 本地开发环境
             config = {
                 'host': 'localhost',
                 'user': 'root',
-                'password': 'lyx20041116',  # 您的本地 MySQL 密码
+                'password': 'lyx20041116',
                 'database': 'antibiotic_resistance',
                 'port': 3306
             }
+            st.sidebar.info("💻 连接到本地数据库")
+        
         conn = mysql.connector.connect(**config)
         return conn
+        
     except mysql.connector.Error as e:
         st.error(f"数据库连接错误: {e}")
+        # 调试信息
+        try:
+            st.write("调试信息:")
+            st.write(f"hasattr st.secrets: {hasattr(st, 'secrets')}")
+            if hasattr(st, 'secrets'):
+                st.write(f"secrets keys: {list(st.secrets.keys()) if st.secrets else 'empty'}")
+        except:
+            pass
         return None
+        
 
 # 侧边栏
 st.sidebar.title("导航")
