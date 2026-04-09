@@ -102,7 +102,7 @@ if menu == "数据概览":
         try:
             # 显示 aro 表数据
             st.write("### ARO表 (aro)")
-            df_aro = pd.read_sql("SELECT aro_id, aro_accession, aro_name, model_id, protein_accession, dna_accession FROM aro LIMIT 100", conn)
+            df_aro = pd.read_sql("SELECT aro_id, aro_accession, aro_name, model_id, protein_accession, dna_accession FROM aro", conn)
             st.dataframe(df_aro, use_container_width=True)
 
             # 显示模型与分类关联数据
@@ -118,7 +118,6 @@ if menu == "数据概览":
                 FROM model m
                 LEFT JOIN classification c ON m.model_id = c.model_id
                 ORDER BY m.model_id
-                LIMIT 100
             """, conn)
             st.dataframe(df_model_class, use_container_width=True)
 
