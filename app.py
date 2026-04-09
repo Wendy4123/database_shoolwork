@@ -323,6 +323,11 @@ elif menu == "统计分析":
                         LIMIT 10
                     """, conn)
                     
+                if len(df_drug) > 0:
+                    df_drug['amr_gene_family'] = df_drug['amr_gene_family'].apply(
+                        lambda x: x[:25] + '...' if len(x) > 25 else x
+                    )
+                    
                     if len(df_family) > 0:
                         fig1 = px.bar(
                             df_family,
@@ -358,7 +363,7 @@ elif menu == "统计分析":
                     
                     if len(df_mechanism) > 0:
                         df_mechanism['resistance_mechanism_short'] = df_mechanism['resistance_mechanism'].apply(
-                            lambda x: x[:20] + '...' if len(x) > 20 else x
+                            lambda x: x[:30] + '...' if len(x) > 30 else x
                         )
                         fig2 = px.bar(
                             df_mechanism,
