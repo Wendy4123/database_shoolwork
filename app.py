@@ -17,32 +17,26 @@ DB_CONFIG = {
     'connection_timeout': 10
 }
 
-
-
-import streamlit as st
-import mysql.connector
-import pandas as pd
-import plotly.express as px
-
-# 修改后的数据库连接函数（支持本地和云端）
 def get_connection():
-    """创建数据库连接，支持本地运行和Streamlit Cloud"""
+    """创建数据库连接，支持本地和Streamlit Cloud"""
     try:
-        # 优先使用 Streamlit Cloud 的 secrets（云端）
+        # 优先使用 Streamlit Cloud 的 secrets
         if hasattr(st, 'secrets') and 'mysql' in st.secrets:
             config = {
                 'host': st.secrets['mysql']['host'],
                 'user': st.secrets['mysql']['user'],
                 'password': st.secrets['mysql']['password'],
                 'database': st.secrets['mysql']['database'],
-                'port': st.secrets['mysql'].get('port', 3306)
+                'port': int(st.secrets['mysql'].get('port', 4000)),
+                'ssl_ca': st.secrets['mysql'].get('ssl_ca', ''),
+                'use_pure': True
             }
         else:
-            # 本地运行使用本地配置
+            # 本地运行
             config = {
                 'host': 'localhost',
                 'user': 'root',
-                'password': 'lyx20041116',  # 您的本地密码
+                'password': '123456',
                 'database': 'antibiotic_resistance',
                 'port': 3306
             }
@@ -51,6 +45,7 @@ def get_connection():
     except mysql.connector.Error as e:
         st.error(f"数据库连接错误: {e}")
         return None
+
 
 # 测试数据库连接
 @st.cache_resource
