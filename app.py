@@ -358,7 +358,7 @@ elif menu == "统计分析":
                     
                     if len(df_mechanism) > 0:
                         df_mechanism['resistance_mechanism_short'] = df_mechanism['resistance_mechanism'].apply(
-                            lambda x: x[:30] + '...' if len(x) > 30 else x
+                            lambda x: x[:20] + '...' if len(x) > 20 else x
                         )
                         fig2 = px.bar(
                             df_mechanism,
