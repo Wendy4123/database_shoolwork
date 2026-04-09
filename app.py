@@ -8,6 +8,7 @@ st.set_page_config(page_title="抗生素耐药性数据库", layout="wide")
 
 st.title("🦠 抗生素耐药性数据库管理系统")
 
+# 数据库连接配置
 def get_connection():
     """创建数据库连接，支持本地和Streamlit Cloud"""
     try:
@@ -19,15 +20,17 @@ def get_connection():
                 'password': st.secrets['mysql']['password'],
                 'database': st.secrets['mysql']['database'],
                 'port': int(st.secrets['mysql'].get('port', 4000)),
-                'ssl_ca': st.secrets['mysql'].get('ssl_ca', ''),
                 'use_pure': True
             }
+            # 可选：如果需要 SSL 证书
+            if 'ssl_ca' in st.secrets['mysql'] and st.secrets['mysql']['ssl_ca']:
+                config['ssl_ca'] = st.secrets['mysql']['ssl_ca']
         else:
-            # 本地运行
+            # 本地运行（修改为您的本地 MySQL 密码）
             config = {
                 'host': 'localhost',
                 'user': 'root',
-                'password': '123456',
+                'password': 'lyx20041116',  # 您的本地 MySQL 密码
                 'database': 'antibiotic_resistance',
                 'port': 3306
             }
@@ -36,18 +39,6 @@ def get_connection():
     except mysql.connector.Error as e:
         st.error(f"数据库连接错误: {e}")
         return None
-
-
-# 测试数据库连接
-@st.cache_resource
-def test_connection():
-    """测试数据库连接"""
-    try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        conn.close()
-        return True
-    except:
-        return False
 
 # 侧边栏
 st.sidebar.title("导航")
@@ -96,11 +87,11 @@ if menu == "数据概览":
         try:
             # 显示 aro 表数据
             st.write("### 耐药基因表 (aro)")
-            df_aro = pd.read_sql("SELECT aro_id, aro_accession, aro_name, model_id, protein_accession,dna_accession FROM aro", conn)
+            df_aro = pd.read_sql("SELECT aro_id, aro_accession, aro_name, model_id, protein_accession, dna_accession FROM aro LIMIT 100", conn)
             st.dataframe(df_aro, use_container_width=True)
 
             # 显示模型与分类关联数据
-            st.write("### 模型信息表（model)")
+            st.write("### 模型信息表 (model)")
             df_model_class = pd.read_sql("""
                 SELECT 
                     m.model_id,
@@ -112,18 +103,19 @@ if menu == "数据概览":
                 FROM model m
                 LEFT JOIN classification c ON m.model_id = c.model_id
                 ORDER BY m.model_id
+                LIMIT 100
             """, conn)
-            st.dataframe(df_model_class, use_container_width=True)            # 显示 classification 表数据
+            st.dataframe(df_model_class, use_container_width=True)
 
-            # 显示antibiotic表数据
+            # 显示 antibiotic 表数据
             st.write("### 抗生素缩写表 (antibiotic)")
-            df_aro = pd.read_sql("SELECT * FROM antibiotic", conn)
-            st.dataframe(df_aro, use_container_width=True)
+            df_antibiotic = pd.read_sql("SELECT * FROM antibiotic", conn)
+            st.dataframe(df_antibiotic, use_container_width=True)
 
-            # 显示pathogen表数据
+            # 显示 pathogen 表数据
             st.write("### 病原体缩写表 (pathogen)")
-            df_aro = pd.read_sql("SELECT * FROM pathogen", conn)
-            st.dataframe(df_aro, use_container_width=True)
+            df_pathogen = pd.read_sql("SELECT * FROM pathogen", conn)
+            st.dataframe(df_pathogen, use_container_width=True)
    
         except Exception as e:
             st.error(f"查询失败: {e}")
@@ -231,7 +223,7 @@ elif menu == "耐药基因查询":
                                 pmid_df = pd.read_sql(pmid_query, conn, params=(row['aro_accession'],))
                                 pmids = pmid_df.iloc[0]['pmids'] if pmid_df.iloc[0]['pmids'] else '无文献记录'
                                 
-                                # 获取 SNPs mutations 信息（合并重复 accession）
+                                # 获取 SNPs mutations 信息
                                 snps_query = """
                                     SELECT GROUP_CONCAT(DISTINCT mutations ORDER BY mutations SEPARATOR '; ') as mutations
                                     FROM snps 
@@ -273,7 +265,6 @@ elif menu == "耐药基因查询":
                                 if mutations != '无SNP记录':
                                     mutation_list = mutations.split('; ')
                                     st.write(f"共 {len(mutation_list)} 个突变位点")
-                                    # 使用多列布局显示
                                     cols = st.columns(3)
                                     for i, mut in enumerate(mutation_list):
                                         cols[i % 3].write(f"- {mut}")
@@ -295,7 +286,6 @@ elif menu == "耐药基因查询":
         else:
             st.warning("请输入搜索关键词")
 
-
 # 统计分析页面
 elif menu == "统计分析":
     st.subheader("📈 统计分析")
@@ -303,7 +293,6 @@ elif menu == "统计分析":
     conn = get_connection()
     if conn:
         try:
-            # 检查表是否有数据
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM classification")
             count = cursor.fetchone()[0]
@@ -312,7 +301,6 @@ elif menu == "统计分析":
             if count == 0:
                 st.warning("分类表中暂无数据，请先导入数据")
             else:
-                # 使用两列布局
                 col1, col2 = st.columns(2)
                 
                 with col1:
@@ -357,7 +345,6 @@ elif menu == "统计分析":
                     """, conn)
                     
                     if len(df_mechanism) > 0:
-                        # 处理过长的文本
                         df_mechanism['resistance_mechanism_short'] = df_mechanism['resistance_mechanism'].apply(
                             lambda x: x[:30] + '...' if len(x) > 30 else x
                         )
@@ -379,7 +366,6 @@ elif menu == "统计分析":
                     else:
                         st.info("暂无耐药机制数据")
                 
-                # 第二行：药物类别分布
                 st.markdown("---")
                 st.write("### 药物类别分布")
                 
@@ -393,7 +379,6 @@ elif menu == "统计分析":
                 """, conn)
                 
                 if len(df_drug) > 0:
-                    # 处理过长的药物类别名称
                     df_drug['drug_class_short'] = df_drug['drug_class'].apply(
                         lambda x: x[:40] + '...' if len(x) > 40 else x
                     )
@@ -432,18 +417,15 @@ elif menu == "数据管理":
     
     # 管理员验证
     def check_admin():
-        """检查是否为管理员"""
         if 'authenticated' not in st.session_state:
             st.session_state.authenticated = False
         return st.session_state.authenticated
     
     def admin_login():
-        """管理员登录"""
         st.sidebar.markdown("---")
         st.sidebar.subheader("🔐 管理员登录")
         password = st.sidebar.text_input("管理员密码", type="password")
         if st.sidebar.button("登录"):
-            # 设置管理员密码
             if password == "lyx20041116":
                 st.session_state.authenticated = True
                 st.sidebar.success("登录成功！")
@@ -452,16 +434,13 @@ elif menu == "数据管理":
                 st.sidebar.error("密码错误！")
     
     def admin_logout():
-        """管理员登出"""
         if st.sidebar.button("登出"):
             st.session_state.authenticated = False
             st.rerun()
     
-    # 显示登录状态
     if not check_admin():
         st.info("🔒 数据管理需要管理员权限，请在左侧边栏登录")
         admin_login()
-        # 显示只读视图
         conn = get_connection()
         if conn:
             try:
@@ -473,13 +452,11 @@ elif menu == "数据管理":
             finally:
                 conn.close()
     else:
-        # 管理员视图
-        st.success(f"✅ 管理员已登录")
+        st.success("✅ 管理员已登录")
         admin_logout()
         
         tab1, tab2 = st.tabs(["添加ARO", "ARO列表"])
         
-        # 添加ARO标签页
         with tab1:
             st.write("### 添加新ARO")
             with st.form("add_aro"):
@@ -515,7 +492,6 @@ elif menu == "数据管理":
                         else:
                             st.error("无法连接到数据库")
         
-        # ARO列表标签页（可删除）
         with tab2:
             st.write("### ARO列表")
             conn = get_connection()
@@ -524,19 +500,14 @@ elif menu == "数据管理":
                     df = pd.read_sql("SELECT aro_id, aro_accession, aro_name, model_id FROM aro ORDER BY aro_id DESC", conn)
                     
                     if not df.empty:
-                        # 创建选择框
                         aro_options = {f"{row['aro_id']} - {row['aro_accession']} ({row['aro_name']})": row['aro_id'] for _, row in df.iterrows()}
                         selected_aro_display = st.selectbox("选择要删除的ARO", options=list(aro_options.keys()), key="aro_select")
                         selected_aro_id = aro_options[selected_aro_display]
-                        
-                        # 获取选中ARO的详细信息
                         selected_aro = df[df['aro_id'] == selected_aro_id].iloc[0]
                         
-                        # 删除按钮
                         if st.button("🗑️ 删除选中的ARO", type="primary", key="delete_btn"):
                             st.session_state.show_confirm = True
                         
-                        # 确认删除区域
                         if st.session_state.get('show_confirm', False):
                             st.warning(f"⚠️ 确定要删除以下ARO吗？此操作不可撤销！\n\n"
                                       f"- ID: {selected_aro['aro_id']}\n"
@@ -548,32 +519,15 @@ elif menu == "数据管理":
                                 if st.button("✅ 确认删除", key="confirm_delete"):
                                     cursor = conn.cursor()
                                     try:
-                                        # 检查外键依赖
-                                        cursor.execute("""
-                                            SELECT 
-                                                TABLE_NAME,
-                                                COLUMN_NAME
-                                            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
-                                            WHERE REFERENCED_TABLE_NAME = 'aro' 
-                                            AND REFERENCED_TABLE_SCHEMA = DATABASE()
-                                            AND REFERENCED_COLUMN_NAME = 'aro_id'
-                                        """)
-                                        dependencies = cursor.fetchall()
+                                        # 检查外键依赖（只检查 literature 和 snps 表）
+                                        cursor.execute("SELECT COUNT(*) FROM literature WHERE aro_accession = %s", (selected_aro['aro_accession'],))
+                                        lit_count = cursor.fetchone()[0]
+                                        cursor.execute("SELECT COUNT(*) FROM snps WHERE accession = %s", (selected_aro['aro_accession'],))
+                                        snps_count = cursor.fetchone()[0]
                                         
-                                        # 检查是否有实际的依赖数据
-                                        has_dependencies = False
-                                        for dep in dependencies:
-                                            table_name = dep[0]
-                                            column_name = dep[1]
-                                            check_query = f"SELECT COUNT(*) FROM {table_name} WHERE {column_name} = %s"
-                                            cursor.execute(check_query, (selected_aro_id,))
-                                            count = cursor.fetchone()[0]
-                                            if count > 0:
-                                                has_dependencies = True
-                                                st.error(f"❌ 无法删除：该ARO在 {table_name} 表中有 {count} 条关联记录")
-                                        
-                                        if not has_dependencies:
-                                            # 执行删除
+                                        if lit_count > 0 or snps_count > 0:
+                                            st.error(f"❌ 无法删除：该ARO在 literature 表中有 {lit_count} 条关联记录，在 snps 表中有 {snps_count} 条关联记录")
+                                        else:
                                             cursor.execute("DELETE FROM aro WHERE aro_id = %s", (selected_aro_id,))
                                             conn.commit()
                                             st.success(f"✅ 已成功删除ARO ID: {selected_aro_id}")
@@ -594,7 +548,6 @@ elif menu == "数据管理":
                         st.write("### 当前ARO数据表")
                         st.dataframe(df, use_container_width=True)
                         
-                        # 显示统计信息
                         st.write("### 统计信息")
                         col1, col2, col3 = st.columns(3)
                         with col1:
