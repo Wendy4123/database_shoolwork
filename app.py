@@ -8,15 +8,6 @@ st.set_page_config(page_title="抗生素耐药性数据库", layout="wide")
 
 st.title("🦠 抗生素耐药性数据库管理系统")
 
-# 数据库连接配置
-DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'lyx20041116',  # 请修改为您的 MySQL 密码
-    'database': 'antibiotic_resistance',
-    'connection_timeout': 10
-}
-
 def get_connection():
     """创建数据库连接，支持本地和Streamlit Cloud"""
     try:
