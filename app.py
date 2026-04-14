@@ -443,7 +443,7 @@ elif menu == "数据管理":
         st.sidebar.subheader("🔐 管理员登录")
         password = st.sidebar.text_input("管理员密码", type="password")
         if st.sidebar.button("登录"):
-            if password == "1132016":
+            if password == "1132026":
                 st.session_state.authenticated = True
                 st.sidebar.success("登录成功！")
                 st.rerun()
