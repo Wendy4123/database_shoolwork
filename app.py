@@ -494,13 +494,38 @@ elif menu == "数据管理":
                         if conn:
                             try:
                                 cursor = conn.cursor()
-                                cursor.execute("""
-                                    INSERT INTO aro (aro_accession, aro_name, model_id, dna_accession, protein_accession, description)
-                                    VALUES (%s, %s, %s, %s, %s, %s)
-                                """, (aro_accession, aro_name, model_id, dna_accession, protein_accession, description))
-                                conn.commit()
-                                st.success("ARO添加成功！")
-                                st.rerun()
+                                
+                                # 检查重复
+                                duplicate_fields = []
+                                
+                                # 检查 aro_accession 是否重复
+                                cursor.execute("SELECT COUNT(*) FROM aro WHERE aro_accession = %s", (aro_accession,))
+                                if cursor.fetchone()[0] > 0:
+                                    duplicate_fields.append("ARO编号")
+                                
+                                # 检查 aro_name 是否重复
+                                cursor.execute("SELECT COUNT(*) FROM aro WHERE aro_name = %s", (aro_name,))
+                                if cursor.fetchone()[0] > 0:
+                                    duplicate_fields.append("ARO名称")
+                                
+                                # 检查 model_id 是否重复（如果填写了）
+                                if model_id:
+                                    cursor.execute("SELECT COUNT(*) FROM aro WHERE model_id = %s", (model_id,))
+                                    if cursor.fetchone()[0] > 0:
+                                        duplicate_fields.append("模型ID")
+                                
+                                if duplicate_fields:
+                                    st.error(f"❌ 添加失败！以下字段已存在重复值：{', '.join(duplicate_fields)}")
+                                else:
+                                    # 执行插入
+                                    cursor.execute("""
+                                        INSERT INTO aro (aro_accession, aro_name, model_id, dna_accession, protein_accession, description)
+                                        VALUES (%s, %s, %s, %s, %s, %s)
+                                    """, (aro_accession, aro_name, model_id, dna_accession, protein_accession, description))
+                                    conn.commit()
+                                    st.success(f"✅ ARO添加成功！\n\n- ARO编号: {aro_accession}\n- ARO名称: {aro_name}")
+                                    st.rerun()
+                                
                                 cursor.close()
                             except Exception as e:
                                 st.error(f"添加失败: {e}")
