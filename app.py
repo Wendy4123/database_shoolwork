@@ -123,7 +123,7 @@ if menu == "数据概览":
 
             # 显示 abbreviation 表数据
             st.write("### 抗生素病原体缩写表 (abbreviation)")
-            df_abbreviation = pd.read_sql("SELECT * FROM antibiotic", conn)
+            df_abbreviation = pd.read_sql("SELECT * FROM abbreviation", conn)
             st.dataframe(df_abbreviation, use_container_width=True)
 
    
