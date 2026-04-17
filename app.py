@@ -121,15 +121,11 @@ if menu == "数据概览":
             """, conn)
             st.dataframe(df_model_class, use_container_width=True)
 
-            # 显示 antibiotic 表数据
-            st.write("### 抗生素缩写表 (antibiotic)")
-            df_antibiotic = pd.read_sql("SELECT * FROM antibiotic", conn)
-            st.dataframe(df_antibiotic, use_container_width=True)
+            # 显示 abbreviation 表数据
+            st.write("### 抗生素病原体缩写表 (abbreviation)")
+            df_abbreviation = pd.read_sql("SELECT * FROM antibiotic", conn)
+            st.dataframe(df_abbreviation, use_container_width=True)
 
-            # 显示 pathogen 表数据
-            st.write("### 病原体缩写表 (pathogen)")
-            df_pathogen = pd.read_sql("SELECT * FROM pathogen", conn)
-            st.dataframe(df_pathogen, use_container_width=True)
    
         except Exception as e:
             st.error(f"查询失败: {e}")
